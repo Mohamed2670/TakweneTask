@@ -1,11 +1,11 @@
 # Proposed SQL Server schema
 
-Status: pending user review. IDs are int identity unless noted. Required fields are NOT NULL unless marked nullable. Store timestamps as UTC datetime2; ReleaseDate is SQL date. Configure maximum lengths, foreign keys, indexes, check constraints, and delete behavior explicitly through EF Core configurations.
+Status: persistence reviewed; Step 3 adds C# status enums without changing SQL schema. IDs are int identity unless noted. Required fields are NOT NULL unless marked nullable. Store timestamps as UTC datetime2; ReleaseDate is SQL date. Configure maximum lengths, foreign keys, indexes, check constraints, and delete behavior explicitly through EF Core configurations.
 
 | Table | Columns |
 | --- | --- |
 | Users | Id; Name nvarchar(100); Email nvarchar(254); NormalizedEmail nvarchar(254) unique; PasswordHash nvarchar(512); IsActive bit; CreatedAt datetime2 |
-| RefreshTokens | Id; UserId FK; TokenHash char(64) unique; FamilyId uniqueidentifier; CreatedAt datetime2; ExpiresAt datetime2; RevokedAt datetime2 nullable; ReplacedByTokenId int nullable self FK |
+| RefreshTokens | Id; UserId FK; TokenHash char(64) unique; FamilyId uniqueidentifier; CreatedAt datetime2; ExpiresAt datetime2; RevokedAt datetime2 nullable; ReplacedByTokenId int nullable self FK; RowVersion rowversion |
 | Artists | Id; Name nvarchar(150); Email nvarchar(254); Country nvarchar(100) |
 | Tracks | Id; Title nvarchar(200); ArtistId FK; Isrc varchar(12) unique; ReleaseDate date; Genre nvarchar(100); Status varchar(20) |
 | DSPs | Id; Name nvarchar(100) unique |
@@ -44,3 +44,6 @@ Status: pending user review. IDs are int identity unless noted. Required fields 
 - Spotify, Apple Music, YouTube DSPs; pending/live/rejected distribution examples consistent with track statuses.
 - One active demo staff user. Supply its password through local development configuration; hash it using the framework hasher. Document how to set it in README.
 - Keep model configuration and seeds under Data. Choose migration-safe deterministic business seeds and a separate idempotent development-user initializer where password hashing/configuration requires runtime execution. No production demo credentials or automatic production migrations.
+
+
+Status enums: Models/Enums/TrackStatus and DistributionStatus. EF persists lowercase strings and retains SQL check constraints. Auth uses refresh-token hashes with replacement links and strict family replay revocation. Session lifetime is absolute seven days; auth integration tests may leave revoked rows in the local development database.

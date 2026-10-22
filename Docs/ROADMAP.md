@@ -1,6 +1,6 @@
 # Roadmap
 
-All milestones below are planned, not approved or implemented. Each ends with verification, Docs updates, a report, and a user review gate.
+Steps 1–2 completed and reviewed. Step 3 implemented and awaiting review; Steps 4–7 planned. Each ends with verification, Docs updates, a report, and a user review gate.
 
 | Step | Deliverable | Acceptance checks |
 | --- | --- | --- |
@@ -19,7 +19,7 @@ Takwene.sln
 backend/Takwene.Api/
   Controllers/
   DTOs/Auth/ Artists/ Tracks/
-  Models/
+  Models/Enums/
   Data/AppDbContext.cs
   Data/Configurations/
   Data/Seed/
@@ -60,3 +60,5 @@ Use consistent ProblemDetails responses with field errors; 400 invalid input, 40
 - API client reads access tokens through the interface and sends Authorization: Bearer. Serialize refresh calls within a tab, retry a failed protected request at most once, and prevent refresh retry loops.
 - Clear token and user state on logout. Keep storage choice separate from refresh coordination; concurrent browser tabs share the refresh cookie, so review cross-tab rotation behavior during authentication implementation.
 - SessionStorage is a future option, not a requirement for greater traffic volume. Switching requires revisiting XSS exposure, expiry cleanup, and startup behavior.
+
+Step 3 implementation details, exact changed files and verification: STEP-3-REVIEW.md. Strict refresh replay revocation requires cross-tab refresh coordination in Step 5.

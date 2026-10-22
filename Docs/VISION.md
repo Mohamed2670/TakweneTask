@@ -1,7 +1,7 @@
 # Vision and working agreement
 
-Planning version: 0.3 — 2026-10-21 (Africa/Cairo).
-Status: proposal ready for user review; implementation has not started.
+Planning version: 0.4 — 2026-10-21 (Africa/Cairo).
+Status: architecture/persistence reviewed; Step 3 authentication implemented and awaiting review.
 
 ## Goal
 Deliver the Takwene Track Management API and React UI within the assignment scope. SQL Server stores artists, tracks, DSPs, distributions, and authentication data. The UI provides login, track list with status filtering, and track detail with DSP statuses. DSP integration is simulated through database records.
@@ -10,7 +10,7 @@ Deliver the Takwene Track Management API and React UI within the assignment scop
 - SQL Server, .NET controller-based Web API, React frontend.
 - Exactly one backend project in the solution. Repository/service pattern; controllers provide the MVC controller role without views. No DDD project structure.
 - User explicitly reconfirmed the folder structure in ROADMAP.md. Architecture choice is settled.
-- Access JWTs expire after 10 minutes and are not stored in SQL Server. Refresh-token hashes remain a separate proposed persistence requirement.
+- Access JWTs expire after 10 minutes and are not stored in SQL Server. Only refresh-token hashes are persisted.
 - EF Core migrations, explicit relationship configurations, realistic seed data.
 - Backend validation of persistence models and request DTOs; frontend input validation; trim applicable text inputs.
 - Access token in React memory, with refresh on page reload; refresh token in an HttpOnly cookie. Keep a small frontend token-storage interface to permit a future switch to sessionStorage without rewriting auth consumers.
@@ -29,7 +29,7 @@ Docs is the source of truth for where we are, what is complete, what is next, an
 5. Use focused repositories; avoid generic frameworks and unnecessary abstractions. Agree on transaction ownership before implementation.
 6. Keep secrets out of tracked files and logs. Never log passwords, tokens, or cookie values.
 7. Track actual AI contributions, security findings, and corrections as they occur for DECISIONS.md. Do not invent user contributions or mistakes.
-8. Make no commits or pushes until authorized; preserve meaningful milestones when commits are authorized.
+8. User authorized local commits for every completed milestone. Include tracking updates in each commit. The user will push to origin after completion; do not push automatically.
 
 ## Assignment alignment — decision recorded
 The assignment explicitly requires Clean Architecture. The user reconfirmed one project with the documented layered folder structure. Proceed with that choice; do not reopen the project-count decision. Describe the architecture honestly in README and DECISIONS, including that folder boundaries are not enforced through separate assemblies.
@@ -37,7 +37,7 @@ The assignment explicitly requires Clean Architecture. The user reconfirmed one 
 ## Security clarification
 User approved in-memory access-token storage with refresh on reload. Memory avoids browser-storage persistence but does not prevent XSS. A future sessionStorage adapter is an extension point, not an implemented feature or an automatic scaling requirement. Do not duplicate the access token into a cookie without an explicit decision.
 
-Proposed defaults: 10-minute JWT access token; 7-day cryptographically random opaque refresh token; hash refresh tokens in SQL Server; rotate them on refresh; revoke their token family on reuse. Access JWTs travel in Authorization: Bearer. Refresh cookies use HttpOnly, Secure, explicit SameSite, and a scoped path. Protect cookie-authenticated refresh/logout against CSRF through origin checks and an agreed anti-CSRF mechanism. Use local HTTPS to exercise secure cookies.
+Implemented authentication defaults: 10-minute JWT access token; 7-day cryptographically random opaque refresh token; hash refresh tokens in SQL Server; rotate them on refresh; revoke their token family on reuse. Access JWTs travel in Authorization: Bearer. Refresh cookies use HttpOnly, Secure, explicit SameSite, and a scoped path. Protect auth POSTs through an exact allowed Origin and X-CSRF: 1 custom header over HTTPS. The cookie uses SameSite=None for current development topology. Use local HTTPS to exercise secure cookies.
 
 Access-token database persistence is explicitly excluded. Validate JWT signature, issuer, audience, and expiration without a per-request token lookup. Browser storage is confirmed as memory; database persistence and browser storage are distinct decisions. Under this design, revoking refresh tokens prevents renewal but does not immediately invalidate an already-issued access token.
 
@@ -50,5 +50,8 @@ Sources:
 
 ## Open decisions
 - Confirm schema and status rules in SCHEMA.md.
-- Confirm login is for a seeded demo user, with no public registration or roles in this scope.
-- Establish receipt time/deadline, installed SDK/Node versions, SQL Server instance, frontend port, and local HTTPS setup during foundation work.
+- Seeded staff login implemented; no public registration or roles in scope.
+- Task receipt/deadline remains unknown. Runtime/SQL/ports are recorded in handoff; local HTTPS certificate exists, browser trust is unverified.
+
+
+Git rule confirmed 2026-10-22: commit each completed milestone locally, including Docs updates; leave pushing to the user. See GIT-HISTORY.md. Committing does not imply user approval of Step 3.

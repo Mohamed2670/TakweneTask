@@ -1,3 +1,4 @@
+using Takwene.Api.Models.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Takwene.Api.Models;
@@ -12,7 +13,7 @@ public class TrackConfiguration : IEntityTypeConfiguration<Track>
     {
         b.ToTable("Tracks", t => t.HasCheckConstraint("CK_Tracks_Status", "[Status] IN ('draft','submitted','distributed')"));
         b.Property(x => x.Isrc).HasColumnType("varchar(12)").IsRequired();
-        b.Property(x => x.Status).HasColumnType("varchar(20)").IsRequired();
+        b.Property(x => x.Status).HasConversion(v => v.ToString().ToLowerInvariant(), v => Enum.Parse<TrackStatus>(v, true)).HasColumnType("varchar(20)").IsRequired();
         b.HasIndex(x => x.Isrc).IsUnique();
         b.HasMany(x => x.Distributions).WithOne(x => x.Track).HasForeignKey(x => x.TrackId).OnDelete(DeleteBehavior.Restrict);
     }
@@ -30,7 +31,7 @@ public class DistributionConfiguration : IEntityTypeConfiguration<TrackDistribut
     public void Configure(EntityTypeBuilder<TrackDistribution> b)
     {
         b.ToTable("TrackDistributions", t => t.HasCheckConstraint("CK_Distributions_Status", "[Status] IN ('pending','live','rejected')"));
-        b.Property(x => x.Status).HasColumnType("varchar(20)").IsRequired();
+        b.Property(x => x.Status).HasConversion(v => v.ToString().ToLowerInvariant(), v => Enum.Parse<DistributionStatus>(v, true)).HasColumnType("varchar(20)").IsRequired();
         b.HasIndex(x => new { x.TrackId, x.DspId }).IsUnique();
     }
 }

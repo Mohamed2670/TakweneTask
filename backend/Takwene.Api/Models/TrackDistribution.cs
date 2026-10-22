@@ -1,3 +1,4 @@
+using Takwene.Api.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 namespace Takwene.Api.Models;
 public class TrackDistribution
@@ -8,6 +9,6 @@ public class TrackDistribution
     public int DspId { get; set; }
     public Dsp Dsp { get; set; } = null!;
     public DateTime SubmittedAt { get; set; }
-    [Required, RegularExpression("^(pending|live|rejected)$")] public string Status { get; set; } = "pending";
+    [EnumDataType(typeof(DistributionStatus))] public DistributionStatus Status { get; set; } = DistributionStatus.Pending;
 }
 

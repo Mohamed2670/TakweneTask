@@ -1,3 +1,4 @@
+using Takwene.Api.Models.Enums;
 using System.ComponentModel.DataAnnotations;
 namespace Takwene.Api.Models;
 public class Track
@@ -9,7 +10,7 @@ public class Track
     [Required, RegularExpression("^[A-Z]{2}[A-Z0-9]{3}[0-9]{7}$")] public string Isrc { get; set; } = "";
     public DateOnly ReleaseDate { get; set; }
     [Required, MaxLength(100)] public string Genre { get; set; } = "";
-    [Required, RegularExpression("^(draft|submitted|distributed)$")] public string Status { get; set; } = "draft";
+    [EnumDataType(typeof(TrackStatus))] public TrackStatus Status { get; set; } = TrackStatus.Draft;
     public ICollection<TrackDistribution> Distributions { get; set; } = new List<TrackDistribution>();
 }
 
