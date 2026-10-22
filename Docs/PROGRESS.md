@@ -20,3 +20,4 @@ Current step: 4 — Artist/Track API completed; awaiting review.
 
 ## Next
 Review STEP-4-REVIEW.md, then authorize Step 5 frontend. Do not implement the next milestone before review. Commit Step 4 locally with Docs; user handles pushing. See GIT-HISTORY.md for earlier reconstructed history.
+Mapping refactor requested before frontend: see Docs/MAPPING-PLAN.md. Proposed Profiles map creation inputs to new models and models to safe responses; business/security mutations remain explicit. Library/license choice and mapping plan await user review. No application code changed.

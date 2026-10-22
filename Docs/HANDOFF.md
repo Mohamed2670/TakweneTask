@@ -18,3 +18,4 @@ Track/auth scripts pass over local HTTPS; test clients skip certificate validati
 User reviews Step 4, then frontend login/list/detail and refresh coordination. Final log/rate-limit hardening Step 6; lists currently unpaginated and lock timeout has generic server response. Do not expand scope without review.
 
 Git on main; commit each completed step with Docs; never push unless asked. Verification server must be stopped before handoff. No automatic migration/seeding.
+Mapping refactor requested before frontend: see Docs/MAPPING-PLAN.md. Proposed Profiles map creation inputs to new models and models to safe responses; business/security mutations remain explicit. Library/license choice and mapping plan await user review. No application code changed.
