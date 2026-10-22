@@ -21,3 +21,4 @@ Current step: 4a — profile-based DTO mapping refactor completed; awaiting revi
 
 ## Next
 User reviews Docs/MAPPING-REVIEW.md. Start Step 5 React UI only after review. Commit this completed refactor with Docs locally; user handles pushing. No migration or frontend changes in this step.
+Pending token-generator refactor plan: see Docs/TOKEN-GENERATOR-PLAN.md. User proposed SecurityTokenDescriptor. Plan extracts ITokenGenerator, retains 10-minute access JWTs and opaque refresh tokens, uses sub/email/jti, and excludes absent Role/BranchId. Await user plan review; no token code changed.
