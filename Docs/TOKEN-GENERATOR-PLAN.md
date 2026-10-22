@@ -1,7 +1,7 @@
 # Token generator refactor plan
 
 Updated: 2026-10-22 (Africa/Cairo).
-Status: proposal awaiting user review; no application code changed.
+Status: plan approved by user; implemented and verified; implementation review pending.
 
 ## Proposed structure
 - Services/Interfaces/ITokenGenerator.cs: GenerateAccessToken(User user).
@@ -22,4 +22,4 @@ Refresh tokens remain opaque cryptographically random values, hashed in SQL, rot
 ## Verification and delivery
 Build, existing auth/track integration suites, JWT claims/lifetime/response-expiry checks, EF model consistency. Update Docs, README and DECISIONS, commit the completed refactor locally, pause for review before frontend.
 
-User requested planning, not implementation. Resolve the proposed method shape and claims before changing code.
+User approved this access-specific method and claims plan. See TOKEN-GENERATOR-REVIEW.md for implementation verification.

@@ -2,23 +2,22 @@
 
 Updated: 2026-10-22 (Africa/Cairo).
 Active workspace: E:\TakweneTask; original workspace superseded.
-Current step: 4a — profile-based DTO mapping refactor completed; awaiting review.
+Current step: 4b — dedicated token generator completed; awaiting review.
 
 ## Completed
-- Steps 1–4 implemented. User requested an additional mapping refactor before frontend.
-- AutoMapper 16.2.0 selected explicitly by user; no Mapster references remain.
-- Profiles/ArtistProfile.cs, TrackProfile.cs, AuthProfile.cs define seven one-way mappings. MappingRegistration registers profiles through DI; startup validates configuration.
-- Artist/Track/Auth services use IMapper for structural conversion. Validation, default Draft status, transitions, distribution fan-out, transactions and token generation remain explicit service logic.
-- MAPPING-PLAN and MAPPING-REVIEW updated; README documents dependency/license configuration.
+- Steps 1–4 and AutoMapper refactor implemented. User approved the descriptor-based token generator plan before frontend.
+- ITokenGenerator, TokenGenerator and AccessTokenResult added. AuthService delegates JWT generation and retains auth/session orchestration and mapped user response.
+- Descriptor defines HS256 issuer/audience/signing credentials, sub/email/jti, explicit iat/nbf/exp from one UTC instant, and the configured 10-minute lifetime.
+- API expiry matches JWT whole-second precision. Opaque refresh generation/hash/rotation/cookies remain unchanged.
+- Token-generator plan/review, README, DECISIONS and tracking updated.
 
 ## Verification
-- Build passes, zero warnings/errors. AutoMapper configuration validates at startup.
-- Track/auth integration harnesses pass, including added checks for flattened names, sorted distributions, UTC timestamps and safe-user fields. Business fixtures removed.
-- Persistence constraints and seed counts unchanged. EF no pending model changes.
-- Transitive NuGet audit reports no vulnerable packages.
-- Missing AutoMapper license warning remains visible; development/testing only until production license is configured.
-- Frontend/browser cookies/certificate trust and final logging/rate limits remain pending.
+- Build passes, zero warnings/errors.
+- Auth harness passes including new exact-expiry, 600-second lifetime, metadata, user-claim allowlist, fresh jti and refreshed-JWT authorization checks.
+- Full track regression and SQL persistence constraints pass; original seed counts preserved.
+- EF no pending model changes. No package, schema, frontend or endpoint-shape changes.
+- AutoMapper's documented development/testing license warning remains visible; production license not configured.
+- Browser cookies/certificate trust and frontend UI/final hardening still pending.
 
 ## Next
-User reviews Docs/MAPPING-REVIEW.md. Start Step 5 React UI only after review. Commit this completed refactor with Docs locally; user handles pushing. No migration or frontend changes in this step.
-Pending token-generator refactor plan: see Docs/TOKEN-GENERATOR-PLAN.md. User proposed SecurityTokenDescriptor. Plan extracts ITokenGenerator, retains 10-minute access JWTs and opaque refresh tokens, uses sub/email/jti, and excludes absent Role/BranchId. Await user plan review; no token code changed.
+User reviews TOKEN-GENERATOR-REVIEW.md. Start Step 5 React UI only after review. Commit this completed refactor with Docs locally; user handles pushing.

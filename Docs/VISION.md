@@ -1,7 +1,7 @@
 # Vision and working agreement
 
-Planning version: 0.6 — 2026-10-22 (Africa/Cairo).
-Status: Step 4 API complete; requested mapping refactor implemented and awaiting review before frontend.
+Planning version: 0.7 — 2026-10-22 (Africa/Cairo).
+Status: Step 4 API and mapping refactor complete; approved token-generator refactor implemented and awaiting review before frontend.
 
 ## Goal
 Deliver the Takwene Track Management API and React UI within the assignment scope. SQL Server stores artists, tracks, DSPs, distributions, and authentication data. The UI provides login, track list with status filtering, and track detail with DSP statuses. DSP integration is simulated through database records.
@@ -10,7 +10,7 @@ Deliver the Takwene Track Management API and React UI within the assignment scop
 - SQL Server, .NET controller-based Web API, React frontend.
 - Exactly one backend project in the solution. Repository/service pattern; controllers provide the MVC controller role without views. No DDD project structure.
 - User explicitly reconfirmed the folder structure in ROADMAP.md. Architecture choice is settled.
-- Access JWTs expire after 10 minutes and are not stored in SQL Server. Only refresh-token hashes are persisted.
+- Access JWTs expire after 10 minutes and are not stored in SQL Server. A dedicated ITokenGenerator uses SecurityTokenDescriptor and returns the token with its exact expiry; claims are sub/email/jti. Only refresh-token hashes are persisted.
 - EF Core migrations, explicit relationship configurations, realistic seed data.
 - AutoMapper 16.2.0, explicitly selected by user; one-way mappings centralized in Profiles. Keep validation and business/security operations in services.
 - Backend validation of persistence models and request DTOs; frontend input validation; trim applicable text inputs.

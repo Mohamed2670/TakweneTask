@@ -30,6 +30,29 @@ function New-Login {
     if ($response.StatusCode -ne 200) { throw 'Demo login failed.' }
     return @{ Session=$session; Response=$response; Data=($response.Content | ConvertFrom-Json) }
 }
+function Read-JwtPart([string]$Part) {
+    $base64=$Part.Replace('-','+').Replace('_','/')
+    $base64=$base64.PadRight([int]([Math]::Ceiling($base64.Length/4.0)*4),'=')
+    [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($base64)) | ConvertFrom-Json
+}
+function Assert-GeneratedAccessToken($Data) {
+    $parts=$Data.accessToken.Split('.')
+    if ($parts.Count -ne 3) { throw 'Generated access token is not a compact signed JWT.' }
+    $header=Read-JwtPart $parts[0]
+    $payload=Read-JwtPart $parts[1]
+    if ($header.alg -ne 'HS256' -or $payload.iss -ne 'Takwene.Api' -or $payload.aud -ne 'Takwene.Frontend') { throw 'Generated token signing metadata is incorrect.' }
+    if ($payload.sub -ne [string]$Data.user.id -or $payload.email -ne $Data.user.email) { throw 'Generated user claims are incorrect.' }
+    $tokenId=[Guid]::Empty
+    if (-not [Guid]::TryParseExact([string]$payload.jti,'N',[ref]$tokenId)) { throw 'Generated token identifier is invalid.' }
+    if (([long]$payload.exp-[long]$payload.iat) -ne 600 -or $payload.nbf -ne $payload.iat) { throw 'Access token must use one UTC instant and a 600-second lifetime.' }
+    $responseExpiry=[DateTimeOffset]$Data.expiresAt
+    if ($responseExpiry.ToUnixTimeSeconds() -ne [long]$payload.exp -or ($responseExpiry.Ticks % [TimeSpan]::TicksPerSecond) -ne 0) { throw 'Response expiration does not match the JWT exactly.' }
+    $now=[DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    if ([long]$payload.iat -gt $now -or [long]$payload.exp -le $now) { throw 'Generated token is not currently valid.' }
+    $allowed=@('aud','email','exp','iat','iss','jti','nbf','sub')
+    if (@($payload.PSObject.Properties.Name | Where-Object { $_ -notin $allowed }).Count -ne 0) { throw 'JWT contains unexpected user or security data.' }
+    return [string]$payload.jti
+}
 Expect (Call-Api GET '/api/auth/me' $null) 401 'anonymous protected request'
 Expect (Call-Api POST '/api/auth/login' $null $headers @{ email='demo@example.com'; password='incorrect' }) 401 'incorrect password'
 Expect (Call-Api POST '/api/auth/login' $null $headers @{ email='not-an-email'; password='x' }) 400 'input validation'
@@ -51,11 +74,18 @@ if (($publicUserFields -join ',') -ne 'email,id,name') { throw 'User mapping exp
 Write-Output 'PASS: mapped user contains only public fields'
 Write-Output 'PASS: login, trimmed email, cookie attributes, safe response'
 $access = $login.Data.accessToken
+$loginJti=Assert-GeneratedAccessToken $login.Data
+Write-Output 'PASS: generated JWT claims, HS256, exact expiry and 10-minute lifetime'
 Expect (Call-Api GET '/api/auth/me' $null @{ Authorization="Bearer $access" }) 200 'valid JWT'
 Expect (Call-Api GET '/api/auth/me' $null @{ Authorization='Bearer invalid.token.value' }) 401 'invalid JWT'
 $oldToken = $login.Session.Cookies.GetCookies([uri]("$BaseUrl/api/auth/refresh"))[$cookieName].Value
 $refresh = Call-Api POST '/api/auth/refresh' $login.Session
 Expect $refresh 200 'refresh rotation'
+$refreshData=$refresh.Content | ConvertFrom-Json
+$refreshJti=Assert-GeneratedAccessToken $refreshData
+if ($loginJti -eq $refreshJti) { throw 'Refresh must issue a new access-token identifier.' }
+Write-Output 'PASS: refreshed access token has valid claims and a new identifier'
+Expect (Call-Api GET '/api/auth/me' $null @{ Authorization=('Bearer '+$refreshData.accessToken) }) 200 'refreshed JWT accepted'
 $newToken = $login.Session.Cookies.GetCookies([uri]("$BaseUrl/api/auth/refresh"))[$cookieName].Value
 if ($oldToken -eq $newToken) { throw 'Refresh token was not rotated.' }
 Expect (Call-Api POST '/api/auth/refresh' (Session-WithToken $oldToken)) 401 'replayed refresh rejected'
