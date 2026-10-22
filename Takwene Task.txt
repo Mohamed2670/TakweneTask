@@ -1,0 +1,86 @@
+Full stack Software Engineer Task
+
+Task Description
+Act as if you're joining a media-tech company with focus on content distribution on the MENA
+region. The company manages content creators and artists, and their tracks, distributing their
+content to DSPs (Digital Service Providers) like Spotify, Apple Music, and YouTube. Your main
+task is to build a Track Management API with a Angular front-end, as a full-stack Software
+Engineer. Before starting the task.
+
+What You'll Build
+TASK 1— Backend (.NET Web API)
+Data Model — design and create the following entities:
+● Artist — id, name, email, country
+● Track — id, title, artist_id, isrc (unique identifier per track), release_date, genre, status
+(draft / submitted / distributed)
+● DSP — id, name (e.g. Spotify, Apple Music, YouTube)
+● TrackDistribution — id, track_id, dsp_id, submitted_at, status (pending / live /
+rejected)
+Required endpoints:
+Method Route Description
+POST /api/artists Create an artist
+GET /api/artists List all artists
+POST /api/tracks Create a track for an artist
+
+GET /api/tracks List tracks with filters:
+?artistId=&genre=&status=
+GET /api/tracks/{id} Get track details including its DSP
+
+distribution statuses
+
+POST /api/tracks/{id}/di
+
+stribute
+
+Submit a track to one or more DSPs
+
+PATCH /api/tracks/{id}/st
+
+atus
+
+Update a track's status
+
+Requirements:
+● Use EF Core with proper migrations
+● Follow Clean Architecture
+● Input validation with meaningful error responses
+● At least one endpoint must be JWT-protected
+● Seed the database with realistic sample data: 3+ artists, 8+ tracks across different
+genres and statuses, 3 DSPs
+
+TASK 2 — Front-End (Angular OR React)
+Build a simple single-page UI with two views:
+1. Track List — displays all tracks with their artist's name, genre, and current status. Allow
+filtering by status.
+2. Track Detail — click a track to see its full info and which DSPs it has been distributed to
+and their statuses.
+No design system required. Functional is enough.
+
+TASK 3— The Vibe Coding Challenge, Read Carefully
+This is where we actually evaluate you — not just the code.
+
+You are expected and encouraged to use AI tools (Cursor, Copilot, ChatGPT, Claude —
+whatever you use daily). However, you must submit a DECISIONS.md file answering these
+questions:
+1. What did AI generate for you, and what did you write or modify yourself? Be
+honest.
+2. What security issues did you find (or introduce) in the AI-generated code? How did
+you handle them?
+3. One thing the AI got wrong is that you had to fix. What was it and why was it wrong?
+
+Submission Requirements
+● It's advisable to check our website and our social media accounts , etc to understand
+more about Takwene.
+● GitHub repo (public or shared access) with a clean commit history — do not squash
+everything into one commit
+● README.md with setup instructions, how to run migrations, and how to obtain a JWT
+token
+● DECISIONS.md as described above.
+● Submission Date is a maximum of 72 hrs from the date of receiving the
+Document.(Weekend is included).
+● Please add your Response in a Google Drive Doc accessible link and upload the
+document through the response Button. Name it in this way
+FIRSTNAME_SECONEDNAME_FULLSTACKDEVELOPER.inside the Document, Add
+as the links as follows; 01_ Project link (github link) 02_How to run the project (readme
+link)03_Vibe coding challenges (decicsion.md link).
+We wish you Best of Luck!
