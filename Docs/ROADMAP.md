@@ -1,6 +1,6 @@
 # Roadmap
 
-Steps 1–4 implemented. Extra Step 4a AutoMapper and Step 4b token-generator refactors implemented; Step 4b awaits review; Steps 5–7 planned. Each ends with verification, Docs updates, a report, and a user review gate.
+Steps 1–4 implemented. Extra Step 4a AutoMapper and Step 4b access-token and Step 4c refresh-token refactors implemented; Step 4c awaits review; Steps 5–7 planned. Each ends with verification, Docs updates, a report, and a user review gate.
 
 | Step | Deliverable | Acceptance checks |
 | --- | --- | --- |
@@ -11,6 +11,7 @@ Steps 1–4 implemented. Extra Step 4a AutoMapper and Step 4b token-generator re
 | 4 — Track API | Required artist/track endpoints, DTOs, services, repositories, validation and errors | Filters/details work; bad input, missing records, duplicate ISRC/distributions, and status rules checked; protected writes reject anonymous requests |
 | 4a — Mapping refactor | AutoMapper 16.2.0 profiles and service cleanup | Mapping configuration and existing API regressions pass; user review |
 | 4b — Token generator | Dedicated SecurityTokenDescriptor service | Claims/expiry checks and auth/track regressions pass; user review |
+| 4c — Refresh generator | Dedicated opaque generation/hash service | Hash persistence, fixed expiry, rotation and existing regressions pass; user review |
 | 5 — React UI | Login screen plus two track views, API client and session flow | Real login works; status filter and details work; loading/empty/error/expired-session states; frontend validation matches API constraints |
 | 6 — Hardening | Structured logging, correlation IDs, rate limits, final security pass | No sensitive logs; meaningful throttling responses; focused integration checks; full browser flow verified |
 | 7 — Submission | README, DECISIONS, requirement checklist, submission-link instructions | Fresh setup/migration instructions verified; honest AI record; repo history and final links reviewed; user controls external submission |

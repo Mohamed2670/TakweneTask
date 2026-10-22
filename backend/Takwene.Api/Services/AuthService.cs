@@ -1,6 +1,5 @@
 using AutoMapper;
 using System.Security.Cryptography;
-using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Takwene.Api.DTOs.Auth;
 using Takwene.Api.Models;
@@ -8,7 +7,12 @@ using Takwene.Api.Options;
 using Takwene.Api.Repositories.Interfaces;
 using Takwene.Api.Services.Interfaces;
 namespace Takwene.Api.Services;
-public sealed class AuthService(IAuthRepository repository, ITokenGenerator tokenGenerator, IPasswordHasher<User> hasher, IMapper mapper) : IAuthService
+public sealed class AuthService(
+    IAuthRepository repository,
+    ITokenGenerator tokenGenerator,
+    IRefreshTokenGenerator refreshTokenGenerator,
+    IPasswordHasher<User> hasher,
+    IMapper mapper) : IAuthService
 {
     private static readonly string DummyHash = new PasswordHasher<User>().HashPassword(new User(), Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));
     public async Task<AuthSession?> LoginAsync(LoginRequest request, CancellationToken ct)
@@ -18,16 +22,16 @@ public sealed class AuthService(IAuthRepository repository, ITokenGenerator toke
         if (user is null || !user.IsActive || verification == PasswordVerificationResult.Failed) return null;
         if (verification == PasswordVerificationResult.SuccessRehashNeeded) user.PasswordHash = hasher.HashPassword(user, request.Password);
         var now = DateTime.UtcNow;
-        var raw = NewRefreshToken();
-        var refresh = CreateRefresh(user.Id, raw, Guid.NewGuid(), now, now.AddDays(JwtOptions.RefreshTokenDays));
+        var generated = refreshTokenGenerator.GenerateRefreshToken();
+        var refresh = CreateRefresh(user.Id, generated, Guid.NewGuid(), now, now.AddDays(JwtOptions.RefreshTokenDays));
         repository.AddRefreshToken(refresh);
         await repository.SaveAsync(ct);
-        return new AuthSession(CreateAuthResponse(user), raw, refresh.ExpiresAt);
+        return new AuthSession(CreateAuthResponse(user), generated.Token, refresh.ExpiresAt);
     }
     public async Task<AuthSession?> RefreshAsync(string raw, CancellationToken ct)
     {
         if (raw.Length != 64) return null;
-        var hash = Hash(raw);
+        var hash = refreshTokenGenerator.HashToken(raw);
         var initial = await repository.FindRefreshTokenAsync(hash, ct);
         if (initial is null) return null;
         return await repository.WithFamilyLockAsync<AuthSession?>(initial.FamilyId, async () =>
@@ -41,20 +45,20 @@ public sealed class AuthService(IAuthRepository repository, ITokenGenerator toke
                 return null;
             }
             if (current.ExpiresAt <= now) return null;
-            var nextRaw = NewRefreshToken();
-            var next = CreateRefresh(current.UserId, nextRaw, current.FamilyId, now, current.ExpiresAt);
+            var nextGenerated = refreshTokenGenerator.GenerateRefreshToken();
+            var next = CreateRefresh(current.UserId, nextGenerated, current.FamilyId, now, current.ExpiresAt);
             repository.AddRefreshToken(next);
             // Mark the old token through a conditional database update, with the family lock held.
             await repository.RevokeFamilyAsync(current.FamilyId, now, ct);
             await repository.SaveAsync(ct);
             await repository.LinkReplacementAsync(current.Id, next.Id, ct);
-            return new AuthSession(CreateAuthResponse(current.User), nextRaw, next.ExpiresAt);
+            return new AuthSession(CreateAuthResponse(current.User), nextGenerated.Token, next.ExpiresAt);
         }, ct);
     }
     public async Task LogoutAsync(string raw, CancellationToken ct)
     {
         if (raw.Length != 64) return;
-        var token = await repository.FindRefreshTokenAsync(Hash(raw), ct);
+        var token = await repository.FindRefreshTokenAsync(refreshTokenGenerator.HashToken(raw), ct);
         if (token is null) return;
         await repository.WithFamilyLockAsync(token.FamilyId, async () =>
         {
@@ -72,8 +76,6 @@ public sealed class AuthService(IAuthRepository repository, ITokenGenerator toke
         var access = tokenGenerator.GenerateAccessToken(user);
         return new AuthResponse(access.Token, access.ExpiresAt, mapper.Map<UserResponse>(user));
     }
-    private static string NewRefreshToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-    private static string Hash(string token) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
-    private static RefreshToken CreateRefresh(int userId, string raw, Guid family, DateTime now, DateTime expires) => new()
-    { UserId=userId, TokenHash=Hash(raw), FamilyId=family, CreatedAt=now, ExpiresAt=expires };
+    private static RefreshToken CreateRefresh(int userId, RefreshTokenResult generated, Guid family, DateTime now, DateTime expires) => new()
+    { UserId=userId, TokenHash=generated.TokenHash, FamilyId=family, CreatedAt=now, ExpiresAt=expires };
 }

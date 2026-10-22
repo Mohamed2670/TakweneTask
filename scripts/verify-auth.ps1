@@ -53,6 +53,22 @@ function Assert-GeneratedAccessToken($Data) {
     if (@($payload.PSObject.Properties.Name | Where-Object { $_ -notin $allowed }).Count -ne 0) { throw 'JWT contains unexpected user or security data.' }
     return [string]$payload.jti
 }
+function Get-RefreshMetadata([string]$Token) {
+    if ($Token -cnotmatch '^[0-9A-F]{64}$') { throw 'Refresh generator must return a 32-byte opaque hexadecimal value.' }
+    $expectedHash=[Convert]::ToHexString([Security.Cryptography.SHA256]::HashData([Text.Encoding]::UTF8.GetBytes($Token)))
+    $query="SET NOCOUNT ON; SELECT Id,TokenHash,CONVERT(varchar(36),FamilyId),CONVERT(varchar(33),CreatedAt,126),CONVERT(varchar(33),ExpiresAt,126),CASE WHEN RevokedAt IS NULL THEN 'active' ELSE 'revoked' END,ISNULL(CONVERT(varchar(20),ReplacedByTokenId),'none') FROM RefreshTokens WHERE TokenHash='$expectedHash';"
+    $rows=@(& sqlcmd -S '.\SQLEXPRESS' -E -C -d TakweneTask -b -h -1 -W -s '|' -Q $query | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    if ($LASTEXITCODE -ne 0 -or $rows.Count -ne 1) { throw 'Expected exactly one persisted refresh hash.' }
+    $fields=@($rows[0] -split '\|' | ForEach-Object { $_.Trim() })
+    if ($fields.Count -ne 7 -or $fields[1] -cne $expectedHash -or $fields[1] -ceq $Token) { throw 'Refresh token hash persistence is incorrect.' }
+    $styles=[Globalization.DateTimeStyles]::AssumeUniversal -bor [Globalization.DateTimeStyles]::AdjustToUniversal
+    return [pscustomobject]@{
+        Id=[int]$fields[0]; FamilyId=$fields[2]
+        CreatedAt=[DateTime]::Parse($fields[3],[Globalization.CultureInfo]::InvariantCulture,$styles)
+        ExpiresAt=[DateTime]::Parse($fields[4],[Globalization.CultureInfo]::InvariantCulture,$styles)
+        State=$fields[5]; ReplacedBy=$fields[6]
+    }
+}
 Expect (Call-Api GET '/api/auth/me' $null) 401 'anonymous protected request'
 Expect (Call-Api POST '/api/auth/login' $null $headers @{ email='demo@example.com'; password='incorrect' }) 401 'incorrect password'
 Expect (Call-Api POST '/api/auth/login' $null $headers @{ email='not-an-email'; password='x' }) 400 'input validation'
@@ -79,6 +95,11 @@ Write-Output 'PASS: generated JWT claims, HS256, exact expiry and 10-minute life
 Expect (Call-Api GET '/api/auth/me' $null @{ Authorization="Bearer $access" }) 200 'valid JWT'
 Expect (Call-Api GET '/api/auth/me' $null @{ Authorization='Bearer invalid.token.value' }) 401 'invalid JWT'
 $oldToken = $login.Session.Cookies.GetCookies([uri]("$BaseUrl/api/auth/refresh"))[$cookieName].Value
+$initialRefresh=Get-RefreshMetadata $oldToken
+if (($initialRefresh.ExpiresAt-$initialRefresh.CreatedAt).TotalDays -ne 7) { throw 'Initial refresh session lifetime must be seven days.' }
+$cookieExpiry=$login.Session.Cookies.GetCookies([uri]("$BaseUrl/api/auth/refresh"))[$cookieName].Expires.ToUniversalTime()
+if ([Math]::Abs(($cookieExpiry-$initialRefresh.ExpiresAt).TotalSeconds) -ge 1) { throw 'Refresh cookie expiry differs from persisted session expiry.' }
+Write-Output 'PASS: opaque refresh value, SHA256-only persistence, seven-day lifetime and cookie expiry'
 $refresh = Call-Api POST '/api/auth/refresh' $login.Session
 Expect $refresh 200 'refresh rotation'
 $refreshData=$refresh.Content | ConvertFrom-Json
@@ -88,6 +109,11 @@ Write-Output 'PASS: refreshed access token has valid claims and a new identifier
 Expect (Call-Api GET '/api/auth/me' $null @{ Authorization=('Bearer '+$refreshData.accessToken) }) 200 'refreshed JWT accepted'
 $newToken = $login.Session.Cookies.GetCookies([uri]("$BaseUrl/api/auth/refresh"))[$cookieName].Value
 if ($oldToken -eq $newToken) { throw 'Refresh token was not rotated.' }
+$rotatedRefresh=Get-RefreshMetadata $newToken
+$previousRefresh=Get-RefreshMetadata $oldToken
+if ($rotatedRefresh.Id -eq $initialRefresh.Id -or $rotatedRefresh.FamilyId -ne $initialRefresh.FamilyId -or $rotatedRefresh.ExpiresAt.Ticks -ne $initialRefresh.ExpiresAt.Ticks) { throw 'Rotation must issue a new token in the same family without extending session expiry.' }
+if ($previousRefresh.State -ne 'revoked' -or $previousRefresh.ReplacedBy -ne [string]$rotatedRefresh.Id -or $rotatedRefresh.State -ne 'active') { throw 'Refresh replacement chain is incorrect.' }
+Write-Output 'PASS: rotated hash, fixed family expiry and persisted replacement chain'
 Expect (Call-Api POST '/api/auth/refresh' (Session-WithToken $oldToken)) 401 'replayed refresh rejected'
 Expect (Call-Api POST '/api/auth/refresh' (Session-WithToken $newToken)) 401 'replayed family revoked'
 $logoutLogin=New-Login

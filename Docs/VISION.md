@@ -1,7 +1,7 @@
 # Vision and working agreement
 
-Planning version: 0.7 — 2026-10-22 (Africa/Cairo).
-Status: Step 4 API and mapping refactor complete; approved token-generator refactor implemented and awaiting review before frontend.
+Planning version: 0.8 — 2026-10-22 (Africa/Cairo).
+Status: API, mappings and access generator complete; requested refresh-generator refactor implemented and awaiting review before frontend.
 
 ## Goal
 Deliver the Takwene Track Management API and React UI within the assignment scope. SQL Server stores artists, tracks, DSPs, distributions, and authentication data. The UI provides login, track list with status filtering, and track detail with DSP statuses. DSP integration is simulated through database records.
@@ -14,6 +14,7 @@ Deliver the Takwene Track Management API and React UI within the assignment scop
 - EF Core migrations, explicit relationship configurations, realistic seed data.
 - AutoMapper 16.2.0, explicitly selected by user; one-way mappings centralized in Profiles. Keep validation and business/security operations in services.
 - Backend validation of persistence models and request DTOs; frontend input validation; trim applicable text inputs.
+- Dedicated IRefreshTokenGenerator handles cryptographic opaque-token generation and hashing; session policy stays in AuthService.
 - Access token in React memory, with refresh on page reload; refresh token in an HttpOnly cookie. Keep a small frontend token-storage interface to permit a future switch to sessionStorage without rewriting auth consumers.
 - Explicit frontend CORS allowlist, including exact localhost development origins.
 - Logging and rate limiting in the final hardening milestone.
