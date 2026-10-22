@@ -1,4 +1,4 @@
-# Proposed SQL Server schema
+# SQL Server schema
 
 Status: persistence reviewed; Step 3 adds C# status enums without changing SQL schema. IDs are int identity unless noted. Required fields are NOT NULL unless marked nullable. Store timestamps as UTC datetime2; ReleaseDate is SQL date. Configure maximum lengths, foreign keys, indexes, check constraints, and delete behavior explicitly through EF Core configurations.
 
@@ -20,7 +20,7 @@ Status: persistence reviewed; Step 3 adds C# status enums without changing SQL s
 - No password plaintext or raw refresh token is persisted. Use a framework password hasher, not a custom hash.
 - Access JWTs have a confirmed 10-minute lifetime and are not persisted. No access-token table is planned. Future session/audit analytics can be modeled independently without storing raw JWTs.
 
-## Input normalization and validation proposal
+## Implemented input normalization and validation
 - Use request DTO rules plus EF constraints and service business checks. Validate frontend inputs for immediate feedback.
 - Trim names, emails, titles, country, genre, and ISRC. Never trim passwords or change password characters.
 - Reject whitespace-only required values and values above configured lengths. Validate email shape without claiming deliverability.
@@ -29,14 +29,14 @@ Status: persistence reviewed; Step 3 adds C# status enums without changing SQL s
 - Validate real calendar dates; future release dates are allowed. Validate positive IDs, supported status values, and existing foreign keys.
 - Distribution requests require at least one distinct valid DSP ID; validate the complete request before writing. Use a transaction for submissions and track status changes.
 
-## Proposed business behavior — requires approval
+## Implemented business behavior — Step 4 review pending
 - New tracks start as draft; creation DTO does not accept arbitrary status.
 - Distribution may submit a draft or submitted track to DSPs it does not already target; new rows are pending. A draft moves to submitted in the same transaction.
 - Duplicate DSP IDs within a request are invalid. A previously targeted DSP produces 409 for the whole request, with no partial writes. Retry/rejection resubmission is outside initial scope.
 - Confirmed adjustment: PATCH /api/tracks/{id}/status can manually move submitted -> distributed without requiring a live DSP distribution. It updates only Tracks.Status, never TrackDistributions.Status, and does not create distribution records.
-- Remaining proposed transition policy: draft -> submitted -> distributed; no backward transitions or direct draft -> distributed initially. Same-status requests succeed without mutation. Validate status values and return 409 for disallowed transitions.
+- Implemented transition policy: draft -> submitted -> distributed; no backward transitions or direct draft -> distributed initially. Same-status requests succeed without mutation. Validate status values and return 409 for disallowed transitions.
 - Distribution submission never pretends content is live. No real DSP callback or distribution-status update endpoint is required. Seed data supplies live/rejected examples; review whether a demo simulation endpoint is desired before expanding scope.
-- Distributed tracks cannot be resubmitted under the initial rules. These rules are design proposals, not explicit assignment requirements.
+- Distributed tracks cannot be resubmitted under the initial rules. These rules are assignment implementation decisions; Step 4 report is ready for user review.
 
 ## Development seed proposal
 - Three or more fictional MENA artists with reserved example.com email addresses.

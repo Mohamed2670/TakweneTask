@@ -1,7 +1,7 @@
 # Vision and working agreement
 
-Planning version: 0.4 — 2026-10-21 (Africa/Cairo).
-Status: architecture/persistence reviewed; Step 3 authentication implemented and awaiting review.
+Planning version: 0.5 — 2026-10-22 (Africa/Cairo).
+Status: Steps 1–3 reviewed; Step 4 artist/track API implemented and awaiting review.
 
 ## Goal
 Deliver the Takwene Track Management API and React UI within the assignment scope. SQL Server stores artists, tracks, DSPs, distributions, and authentication data. The UI provides login, track list with status filtering, and track detail with DSP statuses. DSP integration is simulated through database records.
@@ -49,9 +49,9 @@ Sources:
 - https://learn.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-10.0
 
 ## Open decisions
-- Confirm schema and status rules in SCHEMA.md.
+- Step 4 implements the documented schema/status defaults; review report records behavior and limitations.
 - Seeded staff login implemented; no public registration or roles in scope.
 - Task receipt/deadline remains unknown. Runtime/SQL/ports are recorded in handoff; local HTTPS certificate exists, browser trust is unverified.
 
 
-Git rule confirmed 2026-10-22: commit each completed milestone locally, including Docs updates; leave pushing to the user. See GIT-HISTORY.md. Committing does not imply user approval of Step 3.
+Git rule confirmed 2026-10-22: commit each completed milestone locally, including Docs updates; leave pushing to the user. See GIT-HISTORY.md. Committing does not imply user approval of the current milestone.

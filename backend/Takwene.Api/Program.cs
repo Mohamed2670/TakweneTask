@@ -1,3 +1,4 @@
+using Takwene.Api.Middleware;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -21,6 +22,7 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues:false)));
 builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(
     builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Configure ConnectionStrings:DefaultConnection.")));
@@ -44,6 +46,10 @@ builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationSc
     };
 });
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<IArtistRepository, ArtistRepository>();
+builder.Services.AddScoped<ITrackRepository, TrackRepository>();
+builder.Services.AddScoped<IArtistService, ArtistService>();
+builder.Services.AddScoped<ITrackService, TrackService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();

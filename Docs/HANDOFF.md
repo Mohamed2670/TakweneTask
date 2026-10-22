@@ -1,20 +1,20 @@
 # Handoff
 
 Updated: 2026-10-22 (Africa/Cairo).
-Active workspace: E:\TakweneTask. Original E:\firstC#\TawkeneTask is superseded. Read VISION, ROADMAP, SCHEMA, PROGRESS and STEP-3-REVIEW first.
+Active workspace: E:\TakweneTask. Original E:\firstC#\TawkeneTask superseded. Read VISION, ROADMAP, SCHEMA, PROGRESS and STEP-4-REVIEW first.
 
-## State / next action
-Step 3 enums/auth complete; awaiting user review before Step 4 artist/track endpoints. Exactly one .NET 10 project. Database TakweneTask on SQLEXPRESS contains initial seeds and test refresh sessions. React remains foundation only.
+## Current state
+Step 4 artist/track API implemented and verified; awaiting review before Step 5 frontend. One .NET 10 project. React still foundation. SQL Express database TakweneTask has unchanged business seeds (3 artists, 9 tracks, 3 DSPs, 8 distributions, 1 user) plus revoked auth-test session records.
 
-## Auth implementation
-Access JWT: 10 minutes, no SQL persistence; issuer/audience/signature/lifetime/HS256 validation, zero clock skew. Refresh: 256-bit opaque value, SHA256 hash only, secure HttpOnly SameSite=None cookie scoped /api/auth. Exact origins from config and X-CSRF:1 required for auth POSTs over HTTPS. Local origin http://localhost:5173. 7-day absolute family expiry. SQL sp_getapplock serializes rotations/logout across instances; replay revokes family including a concurrent winning rotation. ReplacedByTokenId populated; RowVersion present. User secrets contain demo password and JWT key; never print/commit. Cookie lifetime and DB expiry agree. No registration/roles.
+## Track API
+Controllers -> services -> focused repositories. DTO normalization and model validation before saves. Central ApiExceptionHandler returns safe ProblemDetails. Artist/track creation and distribution/status writes require JWT. Reads public. Lists combine artistId/genre/status; blank optional text filters mean absent. Status enums persisted as lowercase strings and serialized as strings; no integer JSON enums.
+Track mutations use a transaction plus sp_getapplock with track-specific resource to serialize across processes. Submission validates the full DSP set, adds pending distributions, advances draft->submitted atomically. Existing DSPs conflict whole request. PATCH follows draft->submitted->distributed, idempotent same status, no skip/backwards; independent from provider records. No migration change.
 
-## Enum implementation
-Models/Enums defines TrackStatus and DistributionStatus. EF maps lowercase varchar strings, JSON maps camelCase and rejects numbers. Existing initial migration unchanged; model check passes.
+## Authentication retained
+Access JWT 10 minutes, no SQL persistence. Opaque refresh hash in SQL; absolute seven-day family expiry; rotating cookie HttpOnly/Secure/SameSite=None/path /api/auth. Auth POSTs need HTTPS, exact Origin, X-CSRF:1. Local allowed origin http://localhost:5173. Strict replay revokes family, including a concurrent winning rotation. User secrets hold password/key; never print/commit. Frontend must coordinate refresh across tabs (Web Locks) in Step 5; keep access token in memory behind storage extension point.
 
-## Verification / limitations
-Auth integration harness passes; requires API HTTPS running and reads local secrets silently. Harness skips certificate validation only for test clients and changes one test-created refresh row for expiry; not browser verification. Actual cookie sending with HTTP frontend/HTTPS API not verified. Review same-site topology before deployment. Frontend must serialize refresh across tabs (Web Locks) to avoid strict replay-triggered logout. Browser storage adapter remains for Step 5. Logging/rate limits Step 6. See STEP-3-REVIEW for file list and full checks.
+## Verification / next
+Track/auth scripts pass over local HTTPS; test clients skip certificate validation only. No browser/certificate-trust verification. Script verify-tracks clears WebSession headers to avoid accidental bearer reuse, creates isolated artist-owned fixtures and removes them. Persistence constraints and seed counts checked; EF snapshot consistent; audit checked.
+User reviews Step 4, then frontend login/list/detail and refresh coordination. Final log/rate-limit hardening Step 6; lists currently unpaginated and lock timeout has generic server response. Do not expand scope without review.
 
-Build and migration checks pass. SQL service running. Git is initialized on main with focused local milestone commits. Earlier history is reconstructed; see GIT-HISTORY.md. User handles pushing. Verification server should be stopped at end of turn. No automatic migrations/seeding. DataAnnotations alone do not validate EF saves; API validation/normalization still needed for track endpoints.
-
-Git rule confirmed 2026-10-22: commit each completed milestone locally, including Docs updates; leave pushing to the user. See GIT-HISTORY.md. Committing does not imply user approval of Step 3.
+Git on main; commit each completed step with Docs; never push unless asked. Verification server must be stopped before handoff. No automatic migration/seeding.

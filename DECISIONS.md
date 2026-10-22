@@ -34,3 +34,8 @@ Known tradeoffs: strict replay detection logs out a session if tabs refresh conc
 
 ## Git history provenance
 Git was initialized after Steps 1–3. AI reconstructed planning/foundation/persistence commits from the retained original foundation and current files, then committed current enums/auth. Commits use actual creation dates, not backdated dates. See Docs/GIT-HISTORY.md. The user authorized local milestone commits and will push to origin after completion.
+
+## Step 4 AI contributions and corrections
+AI generated artist/track controllers, DTOs, services, focused repositories, exception mapping and integration tests. User authorized continuing from Step 3 and asked for local milestone commits. Unknown JSON fields are rejected so callers cannot set creation status or persistence fields. JWT protects all business writes. SQL uniqueness/FKs and transaction locks complement service validation; database error details are not returned.
+Review found blank status query values passed RegularExpressionAttribute but then failed Enum.Parse; whitespace-only optional status is now normalized to null and tested. The PowerShell test client retained Authorization in WebSession and caused an initially invalid anonymous-check result; clearing headers before each request fixed the harness and confirmed the API rejects anonymous writes. No false security finding is attributed to the API.
+Track submission/state edits are serialized in SQL transactions to avoid stale status checks and duplicate concurrent submissions. Manual status edits do not claim a DSP is live. Frontend security/browser tests and rate limiting remain future milestones.

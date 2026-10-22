@@ -1,6 +1,6 @@
 # Roadmap
 
-Steps 1–2 completed and reviewed. Step 3 implemented and awaiting review; Steps 4–7 planned. Each ends with verification, Docs updates, a report, and a user review gate.
+Steps 1–3 completed and reviewed. Step 4 implemented and awaiting review; Steps 5–7 planned. Each ends with verification, Docs updates, a report, and a user review gate.
 
 | Step | Deliverable | Acceptance checks |
 | --- | --- | --- |
@@ -62,3 +62,5 @@ Use consistent ProblemDetails responses with field errors; 400 invalid input, 40
 - SessionStorage is a future option, not a requirement for greater traffic volume. Switching requires revisiting XSS exposure, expiry cleanup, and startup behavior.
 
 Step 3 implementation details, exact changed files and verification: STEP-3-REVIEW.md. Strict refresh replay revocation requires cross-tab refresh coordination in Step 5.
+
+Step 4 API implementation, changed files and verification: STEP-4-REVIEW.md. Next milestone remains gated on user review.
