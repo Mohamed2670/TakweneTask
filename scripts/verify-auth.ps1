@@ -46,6 +46,9 @@ $login = New-Login
 $cookieHeader = $login.Response.Headers['Set-Cookie'] -join ';'
 foreach ($attribute in @('httponly','secure','samesite=none','path=/api/auth')) { if ($cookieHeader.ToLowerInvariant() -notlike "*$attribute*") { throw 'Missing refresh cookie security attribute.' } }
 if ($login.Data.PSObject.Properties.Name -contains 'refreshToken') { throw 'Refresh token leaked in response body.' }
+$publicUserFields=@($login.Data.user.PSObject.Properties.Name | Sort-Object)
+if (($publicUserFields -join ',') -ne 'email,id,name') { throw 'User mapping exposed unexpected fields.' }
+Write-Output 'PASS: mapped user contains only public fields'
 Write-Output 'PASS: login, trimmed email, cookie attributes, safe response'
 $access = $login.Data.accessToken
 Expect (Call-Api GET '/api/auth/me' $null @{ Authorization="Bearer $access" }) 200 'valid JWT'

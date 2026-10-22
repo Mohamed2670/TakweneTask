@@ -1,7 +1,7 @@
 # DTO mapping refactor plan
 
 Updated: 2026-10-22 (Africa/Cairo).
-Status: proposal awaiting user review. No application code changed.
+Status: implemented with user-selected AutoMapper 16.2.0; verification passed; implementation review pending.
 
 ## Structure
 Add backend/Takwene.Api/Profiles with ArtistProfile.cs, TrackProfile.cs and AuthProfile.cs. Register profiles once through dependency injection. Services use IMapper for structural conversions, while retaining validation and business rules.
@@ -25,7 +25,7 @@ Initially use in-memory IMapper.Map over the existing eager-loaded repository re
 Validate mapping configuration, including record constructor bindings and ignored destination members. Run build plus existing track/auth integration harnesses and EF consistency check. Add focused checks for flattened names, sorted nested collections, UTC handling and absence of sensitive User fields where needed. Commit the refactor and updated Docs locally after verification, then pause for review.
 
 ## Library decision
-AutoMapper is a candidate, not installed. Current AutoMapper is dual licensed; resolve applicable terms/license before selecting it. Do not pin an outdated version or suppress license warnings as a workaround. User may choose a suitable alternative mapping library if preferred.
+User explicitly selected AutoMapper 16.2.0. AutoMapper is the only mapping library installed; temporary uncommitted Mapster references were removed. AutoMapper 16.2.0 emits a missing-license warning permitting development/testing; no license was supplied, no warning is suppressed, and production licensing remains to be configured. Optional key comes from AutoMapper:LicenseKey configuration or the library's documented environment lookup, never source code.
 Sources: https://docs.automapper.io/en/latest/License-configuration.html and https://docs.automapper.io/en/stable/Dependency-injection.html.
 
-This refactor is an extra review step before Step 5 frontend.
+This refactor is an extra review step before Step 5 frontend. See MAPPING-REVIEW.md for changed files and verification.

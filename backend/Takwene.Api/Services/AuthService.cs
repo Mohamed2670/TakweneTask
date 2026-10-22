@@ -1,3 +1,4 @@
+using AutoMapper;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -11,7 +12,7 @@ using Takwene.Api.Options;
 using Takwene.Api.Repositories.Interfaces;
 using Takwene.Api.Services.Interfaces;
 namespace Takwene.Api.Services;
-public sealed class AuthService(IAuthRepository repository, IOptions<JwtOptions> options, IPasswordHasher<User> hasher) : IAuthService
+public sealed class AuthService(IAuthRepository repository, IOptions<JwtOptions> options, IPasswordHasher<User> hasher, IMapper mapper) : IAuthService
 {
     private static readonly string DummyHash = new PasswordHasher<User>().HashPassword(new User(), Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)));
     public async Task<AuthSession?> LoginAsync(LoginRequest request, CancellationToken ct)
@@ -68,7 +69,7 @@ public sealed class AuthService(IAuthRepository repository, IOptions<JwtOptions>
     public async Task<UserResponse?> GetUserAsync(int id, CancellationToken ct)
     {
         var user = await repository.FindUserByIdAsync(id, ct);
-        return user is null ? null : ToResponse(user);
+        return user is null ? null : mapper.Map<UserResponse>(user);
     }
     private AuthResponse CreateAccess(User user, DateTime now)
     {
@@ -77,13 +78,10 @@ public sealed class AuthService(IAuthRepository repository, IOptions<JwtOptions>
         var jwt = new JwtSecurityToken(settings.Issuer, settings.Audience,
             [new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()), new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString("N"))],
             now, expires, new SigningCredentials(new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.SigningKey)), SecurityAlgorithms.HmacSha256));
-        return new AuthResponse(new JwtSecurityTokenHandler().WriteToken(jwt), expires, ToResponse(user));
+        return new AuthResponse(new JwtSecurityTokenHandler().WriteToken(jwt), expires, mapper.Map<UserResponse>(user));
     }
-    private static UserResponse ToResponse(User user) => new(user.Id, user.Name, user.Email);
     private static string NewRefreshToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
     private static string Hash(string token) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(token)));
     private static RefreshToken CreateRefresh(int userId, string raw, Guid family, DateTime now, DateTime expires) => new()
     { UserId=userId, TokenHash=Hash(raw), FamilyId=family, CreatedAt=now, ExpiresAt=expires };
 }
-
-

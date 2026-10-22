@@ -1,19 +1,23 @@
+using AutoMapper;
 using Takwene.Api.DTOs.Artists;
 using Takwene.Api.Models;
 using Takwene.Api.Repositories.Interfaces;
 using Takwene.Api.Services.Interfaces;
 using Takwene.Api.Validation;
+
 namespace Takwene.Api.Services;
-public sealed class ArtistService(IArtistRepository repository) : IArtistService
+
+public sealed class ArtistService(IArtistRepository repository, IMapper mapper) : IArtistService
 {
-    public async Task<IReadOnlyList<ArtistResponse>> ListAsync(CancellationToken ct) => (await repository.ListAsync(ct)).Select(ToResponse).ToArray();
+    public async Task<IReadOnlyList<ArtistResponse>> ListAsync(CancellationToken ct) =>
+        mapper.Map<ArtistResponse[]>(await repository.ListAsync(ct));
+
     public async Task<ArtistResponse> CreateAsync(CreateArtistRequest request, CancellationToken ct)
     {
         ModelValidator.Validate(request);
-        var artist=new Artist { Name=request.Name, Email=request.Email, Country=request.Country };
+        var artist = mapper.Map<Artist>(request);
         ModelValidator.Validate(artist);
         await repository.AddAsync(artist, ct);
-        return ToResponse(artist);
+        return mapper.Map<ArtistResponse>(artist);
     }
-    private static ArtistResponse ToResponse(Artist artist) => new(artist.Id,artist.Name,artist.Email,artist.Country);
 }

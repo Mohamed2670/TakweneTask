@@ -1,3 +1,4 @@
+using AutoMapper;
 using Takwene.Api.DTOs.Tracks;
 using Takwene.Api.Models;
 using Takwene.Api.Models.Enums;
@@ -5,26 +6,26 @@ using Takwene.Api.Repositories.Interfaces;
 using Takwene.Api.Services.Interfaces;
 using Takwene.Api.Validation;
 namespace Takwene.Api.Services;
-public sealed class TrackService(ITrackRepository tracks, IArtistRepository artists) : ITrackService
+public sealed class TrackService(ITrackRepository tracks, IArtistRepository artists, IMapper mapper) : ITrackService
 {
     public async Task<IReadOnlyList<TrackListResponse>> ListAsync(TrackQuery query, CancellationToken ct)
     {
         ModelValidator.Validate(query);
         TrackStatus? status=query.Status is null ? null : Enum.Parse<TrackStatus>(query.Status, true);
-        return (await tracks.ListAsync(query.ArtistId, query.Genre, status, ct))
-            .Select(x => new TrackListResponse(x.Id,x.Title,x.ArtistId,x.Artist.Name,x.ReleaseDate,x.Genre,x.Status)).ToArray();
+        return mapper.Map<TrackListResponse[]>(await tracks.ListAsync(query.ArtistId, query.Genre, status, ct));
     }
     public async Task<TrackDetailResponse> GetAsync(int id, CancellationToken ct)
     {
         ValidateId(id);
-        return ToDetail(await tracks.FindAsync(id, false, ct) ?? throw new ApiException(404,"Track not found."));
+        return mapper.Map<TrackDetailResponse>(await tracks.FindAsync(id, false, ct) ?? throw new ApiException(404,"Track not found."));
     }
     public async Task<TrackDetailResponse> CreateAsync(CreateTrackRequest request, CancellationToken ct)
     {
         ModelValidator.Validate(request);
         if (!await artists.ExistsAsync(request.ArtistId, ct)) throw new ApiException(400,"The referenced artist does not exist.",new Dictionary<string,string[]> { ["artistId"]=["Choose an existing artist."] });
         if (await tracks.IsrcExistsAsync(request.Isrc, ct)) throw new ApiException(409,"A track with this ISRC already exists.");
-        var track=new Track { Title=request.Title, ArtistId=request.ArtistId, Isrc=request.Isrc, ReleaseDate=request.ReleaseDate!.Value, Genre=request.Genre, Status=TrackStatus.Draft };
+        var track=mapper.Map<Track>(request);
+        track.Status=TrackStatus.Draft;
         ModelValidator.Validate(track);
         await tracks.AddAsync(track,ct);
         return await GetAsync(track.Id,ct);
@@ -70,6 +71,4 @@ public sealed class TrackService(ITrackRepository tracks, IArtistRepository arti
         },ct);
     }
     private static void ValidateId(int id) { if (id<=0) throw new ApiException(400,"Track ID must be positive."); }
-    private static TrackDetailResponse ToDetail(Track track) => new(track.Id,track.Title,track.ArtistId,track.Artist.Name,track.Isrc,track.ReleaseDate,track.Genre,track.Status,
-        track.Distributions.OrderBy(x => x.DspId).Select(x => new DistributionResponse(x.Id,x.DspId,x.Dsp.Name,DateTime.SpecifyKind(x.SubmittedAt,DateTimeKind.Utc),x.Status)).ToArray());
 }

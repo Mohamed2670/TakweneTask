@@ -1,6 +1,6 @@
 # Roadmap
 
-Steps 1–3 completed and reviewed. Step 4 implemented and awaiting review; Steps 5–7 planned. Each ends with verification, Docs updates, a report, and a user review gate.
+Steps 1–4 implemented. Extra Step 4a AutoMapper refactor implemented and awaiting review; Steps 5–7 planned. Each ends with verification, Docs updates, a report, and a user review gate.
 
 | Step | Deliverable | Acceptance checks |
 | --- | --- | --- |
@@ -9,6 +9,7 @@ Steps 1–3 completed and reviewed. Step 4 implemented and awaiting review; Step
 | 2 — Persistence | EF models, relationship configurations, migrations, development seeds | Empty SQL database migrates; 3+ artists, 8+ tracks, 3 DSPs; unique/FK constraints work; demo password hashed |
 | 3 — Authentication | Login, refresh, logout, current-user endpoints; JWT validation; cookie handling; exact CORS | Real seeded user can log in; invalid/expired JWT rejected; refresh rotation, replay rejection, logout, cookie and CSRF behavior verified |
 | 4 — Track API | Required artist/track endpoints, DTOs, services, repositories, validation and errors | Filters/details work; bad input, missing records, duplicate ISRC/distributions, and status rules checked; protected writes reject anonymous requests |
+| 4a — Mapping refactor | AutoMapper 16.2.0 profiles and service cleanup | Mapping configuration and existing API regressions pass; user review |
 | 5 — React UI | Login screen plus two track views, API client and session flow | Real login works; status filter and details work; loading/empty/error/expired-session states; frontend validation matches API constraints |
 | 6 — Hardening | Structured logging, correlation IDs, rate limits, final security pass | No sensitive logs; meaningful throttling responses; focused integration checks; full browser flow verified |
 | 7 — Submission | README, DECISIONS, requirement checklist, submission-link instructions | Fresh setup/migration instructions verified; honest AI record; repo history and final links reviewed; user controls external submission |
@@ -20,6 +21,7 @@ backend/Takwene.Api/
   Controllers/
   DTOs/Auth/ Artists/ Tracks/
   Models/Enums/
+  Profiles/
   Data/AppDbContext.cs
   Data/Configurations/
   Data/Seed/

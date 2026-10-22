@@ -64,6 +64,8 @@ try {
     Expect $filtered 200 'combined filters'
     $items=@($filtered.Content | ConvertFrom-Json)
     if ($items.Count -ne 1 -or $items[0].id -ne $id) { throw 'Combined filters returned wrong records.' }
+    if ($items[0].artistName -ne $artist.name) { throw 'Track-list artist-name mapping failed.' }
+    Write-Output 'PASS: mapped list artist name'
     Expect (Call-Api GET '/api/tracks?status=%20%20') 200 'blank status filter treated as absent'
     Expect (Call-Api GET '/api/tracks?status=0') 400 'numeric status filter rejected'
     Expect (Call-Api GET '/api/tracks?status=invalid') 400 'invalid status filter rejected'
@@ -81,6 +83,8 @@ try {
     Expect (Call-Api PATCH "/api/tracks/$id/status" @{ status='distributed' } $auth) 409 'skipped transition rejected'
     $submitted=Call-Api POST "/api/tracks/$id/distribute" @{ dspIds=@(1) } $auth
     Expect $submitted 200 'distribution submission'
+    if ($submitted.Content -notmatch '"submittedAt"\s*:\s*"[^"]+Z"') { throw 'Mapped distribution timestamp is not UTC.' }
+    Write-Output 'PASS: mapped distribution UTC timestamp'
     $distribution=$submitted.Content | ConvertFrom-Json
     if ($distribution.status -ne 'submitted' -or $distribution.distributions[0].status -ne 'pending' -or $distribution.distributions[0].dspName -ne 'Spotify') { throw 'Submission state incorrect.' }
     Expect (Call-Api POST "/api/tracks/$id/distribute" @{ dspIds=@(1,2) } $auth) 409 'existing DSP rejects mixed request'
@@ -113,6 +117,9 @@ try {
     $finished=Call-Api PATCH "/api/tracks/$id/status" @{ status='distributed' } $auth
     Expect $finished 200 'manual distributed status with pending DSPs'
     $finishedData=$finished.Content | ConvertFrom-Json
+    if (($finishedData.distributions.dspId -join ',') -ne '1,2,3') { throw 'Mapped distribution ordering failed.' }
+    if ($finishedData.artistName -ne $artist.name) { throw 'Track-detail artist-name mapping failed.' }
+    Write-Output 'PASS: mapped detail artist name and distribution ordering'
     if (@($finishedData.distributions | Where-Object status -ne 'pending').Count -ne 0) { throw 'Track status changed DSP statuses.' }
     Expect (Call-Api PATCH "/api/tracks/$id/status" @{ status='distributed' } $auth) 200 'same status is idempotent'
     Expect (Call-Api PATCH "/api/tracks/$id/status" @{ status='draft' } $auth) 409 'backward transition rejected'

@@ -88,3 +88,8 @@ sqlcmd -S '.\SQLEXPRESS' -E -C -d TakweneTask -b -i scripts/verify-persistence.s
 The local PowerShell harnesses read app credentials from user secrets without printing them and skip certificate validation in test clients only. They assume the local SQL instance/database for test expiry/cleanup. Track fixtures are removed; revoked refresh-test records remain. Application code never disables certificate validation. Browser rendering/cookie behavior and certificate trust are not verified by these scripts.
 
 Logging/rate-limit hardening remains Step 6. See Docs/PROGRESS.md, Docs/HANDOFF.md and milestone reports. Local Git commits are created per completed step; the user handles pushing. Early history was reconstructed transparently in Docs/GIT-HISTORY.md.
+
+## DTO mapping
+AutoMapper 16.2.0 provides the seven one-way mappings in backend/Takwene.Api/Profiles: ArtistProfile, TrackProfile, AuthProfile. MappingRegistration registers them; the API validates configuration at startup. Services call IMapper for data conversion while preserving explicit validation, initial status, transitions, timestamps, transactions and security operations. No reverse entity mapping or SQL projection changes are introduced.
+
+AutoMapper reports a missing-license warning allowing development/testing; production licensing is not configured. The warning is not suppressed. If you have an applicable key, configure AutoMapper:LicenseKey through .NET user secrets or AutoMapper__LicenseKey in the server environment. Do not commit keys. See https://docs.automapper.io/en/latest/License-configuration.html and Docs/MAPPING-REVIEW.md.

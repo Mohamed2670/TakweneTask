@@ -1,3 +1,5 @@
+using AutoMapper;
+using Takwene.Api.Profiles;
 using Takwene.Api.Middleware;
 using System.Text;
 using System.Text.Json;
@@ -22,6 +24,7 @@ builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Services.AddControllers().AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues:false)));
 builder.Services.AddProblemDetails();
+builder.Services.AddApplicationMappings(builder.Configuration);
 builder.Services.AddExceptionHandler<ApiExceptionHandler>();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(
     builder.Configuration.GetConnectionString("DefaultConnection")
@@ -55,6 +58,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<AuthRequestFilter>();
 var app = builder.Build();
+app.Services.GetRequiredService<IMapper>().ConfigurationProvider.AssertConfigurationIsValid();
 if (args.Contains("--seed-demo-user"))
 {
     if (!app.Environment.IsDevelopment()) throw new InvalidOperationException("Demo seeding is development-only.");
