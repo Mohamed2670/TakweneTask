@@ -2,22 +2,21 @@
 
 Updated: 2026-10-22 (Africa/Cairo).
 Active workspace: E:\TakweneTask; original workspace superseded.
-Current step: 4c — dedicated refresh-token generator completed; awaiting review.
+Current step: 5 — React UI complete; awaiting user review.
 
 ## Completed
-- API, AutoMapper and access-token generator implemented. User requested the same separation for refresh generation.
-- Added IRefreshTokenGenerator, RefreshTokenGenerator and RefreshTokenResult.
-- Generator creates 32-byte cryptographic random tokens encoded as 64 hexadecimal characters, plus SHA256 hash. HashToken handles incoming refresh/logout lookups consistently.
-- AuthService owns session expiry/families/metadata, rotation, revocation and transactions; persists generated.TokenHash and returns generated.Token only through AuthSession/cookie flow.
-- DI registration added; no JWT conversion, endpoint/cookie/schema/dependency change.
+- Login, track library/status filter/search, and track detail/DSP views integrated with the real API.
+- Memory token adapter, startup refresh, shared refresh promise, one retry after 401, Web Locks across tabs, credential-free session broadcasts, logout and recoverable network errors.
+- Responsive CSS artwork/layout, accessible labels/focus, loading/empty/error/not-found states.
+- User-selected demo password configured locally; explicit Development-only reset command hashes it and revokes old refresh sessions. No credential values committed.
 
 ## Verification
-- Backend build passes, zero warnings/errors.
-- Expanded auth integration checks pass for opaque format, hash-only SQL persistence, seven-day initial expiry, matching cookie expiry, nonextended rotated family expiry, replacement links, replay/logout/expiry/concurrency and access-token claims.
-- Full track regression and SQL constraints pass; original seed counts preserved.
-- EF reports no pending model changes. No dependency audit repeated because dependencies unchanged.
-- Business fixtures removed; test refresh rows remain revoked as documented.
-- Browser cookies/trust, frontend and final logging/rate limits still pending; AutoMapper license warning unchanged.
+- 22 frontend tests pass; TypeScript and production build pass.
+- Backend build: zero warnings/errors; full authentication and track API integration scripts pass with the updated local credential.
+- Real browser: valid/invalid login, status filtering, search empty/reset, details with and without DSP records, reload restoration, simultaneous two-tab refresh, cross-tab sign-in/out and logout persistence passed.
+- API outage shows a retry state; restarting the API and retrying restores the session. Mobile login/list/detail checked at 390px with no horizontal overflow; desktop layout inspected.
+- Browser diagnostics captured no warning/error entries in the final catalog tab. This is not a full browser compatibility/accessibility audit.
+- React Router emits a build warning for its use-client directive in this client-only SPA; build succeeds. AutoMapper production licensing remains unresolved.
 
 ## Next
-User reviews REFRESH-TOKEN-GENERATOR-REVIEW.md before Step 5 frontend. Commit the completed refactor with Docs locally; user handles pushing.
+Review STEP-5-REVIEW.md together. On approval, Step 6 adds logging, correlation IDs, rate limiting and focused hardening checks. Commit this step locally; user handles pushing. Verification servers are stopped at handoff.

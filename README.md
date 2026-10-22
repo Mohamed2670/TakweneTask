@@ -1,6 +1,6 @@
 # Takwene Track Management
 
-Track Management API for the Takwene full-stack assignment. Backend: one .NET Web API project using controllers, services, repositories, EF Core, and SQL Server. Frontend: React/TypeScript foundation; login and track views are the next milestone.
+Track Management API for the Takwene full-stack assignment. Backend: one .NET Web API project using controllers, services, repositories, EF Core, and SQL Server. Frontend: React/TypeScript login, track library with status filtering, and track details with DSP statuses.
 
 ## Prerequisites
 Verified locally: .NET SDK 10.0.203 (global.json), Node 22.16.0, npm 10.9.2, SQL Server Express instance .\SQLEXPRESS. Use a workspace path without #; the active workspace is E:\TakweneTask.
@@ -16,15 +16,15 @@ Development settings use Windows authentication to .\SQLEXPRESS, database Takwen
 
 Configure local secrets (never commit their values):
 ~~~powershell
-dotnet user-secrets set 'Seed:DemoPassword' '<choose-12-to-256-character-password>' --project backend/Takwene.Api
+dotnet user-secrets set 'Seed:DemoPassword' '<choose-6-to-256-character-development-password>' --project backend/Takwene.Api
 $jwtKey = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::GetBytes(48))
 @{ 'Jwt:SigningKey' = $jwtKey } | ConvertTo-Json | dotnet user-secrets set --project backend/Takwene.Api
 dotnet run --project backend/Takwene.Api --launch-profile http -- --seed-demo-user
 dotnet run --project backend/Takwene.Api --launch-profile https
 ~~~
-The seed command is development-only and creates a missing demo@example.com user. It does not reset an existing password. This workspace's initial demo password is already in local .NET user secrets. Business data is seeded deterministically through migrations: 3 artists, 9 tracks, 3 DSPs, and 8 distributions. Normal startup does not migrate or seed automatically.
+The seed command is development-only and creates a missing demo@example.com user. It does not reset an existing password. The locally selected demo password is in .NET user secrets. To explicitly replace an existing demo password, stop the API, update Seed:DemoPassword, then run `dotnet run --project backend/Takwene.Api --launch-profile http -- --reset-demo-password`. This Development-only command hashes the replacement and revokes existing refresh sessions; normal startup never resets credentials. Development seed passwords accept 6–256 characters; this is not a public registration policy. Business data is seeded deterministically through migrations: 3 artists, 9 tracks, 3 DSPs, and 8 distributions. Normal startup does not migrate or seed automatically.
 
-API: https://localhost:7270; HTTP profile: http://localhost:5037. Configure/trust a local HTTPS certificate for browser use. A valid certificate exists locally, but browser trust has not yet been verified. GET /api/health is a basic liveness check, not a database readiness check.
+API: https://localhost:7270; HTTP profile: http://localhost:5037. Configure/trust a local HTTPS certificate for browser use. The local certificate is trusted and actual browser login/refresh was verified. GET /api/health is a basic liveness check, not a database readiness check.
 
 ## Authentication
 POST /api/auth/login with Content-Type: application/json, Origin: http://localhost:5173, X-CSRF: 1, and body:
@@ -39,7 +39,7 @@ POST /api/auth/refresh and POST /api/auth/logout need the refresh cookie, allowe
 
 Only http://localhost:5173 is allowlisted in development. Other environments must configure Cors:AllowedOrigins, Jwt:Issuer, Jwt:Audience, Jwt:SigningKey and the database connection. CORS uses exact origins; server-side origin and custom-header checks provide CSRF protection for auth POSTs.
 
-React will keep access tokens in memory and refresh on reload. Refresh coordination across tabs is required because strict replay detection also revokes sessions when simultaneous refreshes reuse an old token. The token-storage extension point is planned for Step 5; sessionStorage is not currently used.
+React keeps access tokens in memory behind a get/set/clear storage adapter and restores sessions on reload. Web Locks serialize login, refresh and logout across same-origin tabs. BroadcastChannel sends sign-in/sign-out signals without credentials. Modern browser support for Web Locks and a secure context (localhost qualifies) is required. No sessionStorage adapter is implemented.
 
 ## Artist and track API
 Reads are public; all writes require a bearer access token.
@@ -67,13 +67,17 @@ Tracks start draft. Distribution creates pending rows and moves a draft to submi
 
 Invalid inputs return 400 with ProblemDetails/field errors; unauthenticated writes return 401; missing track resources return 404; uniqueness/state conflicts return 409. Unknown referenced artist/DSP IDs return 400. Empty optional text filters act as absent filters. Genre equality follows SQL Server collation; lists are ordered by ID. Pagination is not implemented for this assignment's small dataset.
 
-## Frontend foundation
+## Frontend
 ~~~powershell
 cd frontend
 npm ci
 npm run dev
 ~~~
-Frontend: http://localhost:5173. Build: npm run build. The project foundation works; actual login/track UI remains Step 5.
+Frontend: http://localhost:5173. Build: npm run build. Tests: npm test (22 checks). Copy .env.example to .env.local only to override VITE_API_URL; its default is https://localhost:7270/api. Restart Vite after changing environment configuration.
+
+Routes: /login, /tracks, /tracks/:id. The two catalog views require a restored staff session in the UI. Status filtering is sent to the API and preserved in the URL; title/artist search filters the returned small catalog locally. Loading, empty, not-found and retry states are included. Login trims the email and preserves the password exactly. No editing forms are in the assignment UI scope.
+
+Production hosting must serve index.html for SPA routes and configure the API URL plus exact CORS origin. Revisit cookie topology and browser policy for the deployed origins.
 
 ## Verification
 ~~~powershell
@@ -85,7 +89,7 @@ dotnet list backend/Takwene.Api package --vulnerable --include-transitive
 ./scripts/verify-tracks.ps1
 sqlcmd -S '.\SQLEXPRESS' -E -C -d TakweneTask -b -i scripts/verify-persistence.sql
 ~~~
-The local PowerShell harnesses read app credentials from user secrets without printing them and skip certificate validation in test clients only. They assume the local SQL instance/database for test expiry/cleanup. Track fixtures are removed; revoked refresh-test records remain. Application code never disables certificate validation. Browser rendering/cookie behavior and certificate trust are not verified by these scripts.
+The local PowerShell harnesses read app credentials from user secrets without printing them and skip certificate validation in test clients only. They assume the local SQL instance/database for test expiry/cleanup. Track fixtures are removed; revoked refresh-test records remain. Application code never disables certificate validation. Browser behavior is tested separately: local login, secure-cookie session restore, simultaneous tab reloads, cross-tab sign-in/out, status/details/search, mobile overflow and API-outage recovery passed in the in-app browser. This is not a full browser compatibility or accessibility audit.
 
 Logging/rate-limit hardening remains Step 6. See Docs/PROGRESS.md, Docs/HANDOFF.md and milestone reports. Local Git commits are created per completed step; the user handles pushing. Early history was reconstructed transparently in Docs/GIT-HISTORY.md.
 
