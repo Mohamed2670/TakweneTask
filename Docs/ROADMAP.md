@@ -1,6 +1,6 @@
 # Roadmap
 
-Steps 1–4 implemented. Extra Step 4a AutoMapper and Step 4b access-token and Step 4c refresh-token refactors implemented; Step 4c awaits review; Steps 5–7 planned. Each ends with verification, Docs updates, a report, and a user review gate.
+Steps 1–4c completed and user authorized proceeding. Step 5 React UI implemented, awaiting review; Steps 6–7 planned. Each ends with verification, Docs updates, a report, and a user review gate.
 
 | Step | Deliverable | Acceptance checks |
 | --- | --- | --- |
@@ -62,9 +62,9 @@ Use consistent ProblemDetails responses with field errors; 400 invalid input, 40
 - Store access JWTs in memory behind a small get/set/clear token-storage interface. Implement only the memory adapter initially; a future sessionStorage adapter can use the same interface.
 - On application startup/reload, show an auth-initializing state and call refresh with credentials to restore the session. On refresh rejection, clear auth state and show login; distinguish network/server failures from an invalid session.
 - API client reads access tokens through the interface and sends Authorization: Bearer. Serialize refresh calls within a tab, retry a failed protected request at most once, and prevent refresh retry loops.
-- Clear token and user state on logout. Keep storage choice separate from refresh coordination; concurrent browser tabs share the refresh cookie, so review cross-tab rotation behavior during authentication implementation.
+- Clear token and user state on logout. Keep storage choice separate from refresh coordination; concurrent browser tabs share the refresh cookie, so Web Locks serialize cookie mutations and BroadcastChannel propagates sign-in/out signals without tokens.
 - SessionStorage is a future option, not a requirement for greater traffic volume. Switching requires revisiting XSS exposure, expiry cleanup, and startup behavior.
 
 Step 3 implementation details, exact changed files and verification: STEP-3-REVIEW.md. Strict refresh replay revocation requires cross-tab refresh coordination in Step 5.
 
-Step 4 API implementation, changed files and verification: STEP-4-REVIEW.md. Next milestone remains gated on user review.
+Step 4 API implementation, changed files and verification: STEP-4-REVIEW.md. Step 5 implementation and verification: STEP-5-REVIEW.md. Step 6 remains gated on user review.

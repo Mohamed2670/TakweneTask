@@ -52,3 +52,13 @@ One whole-second UTC instant avoids a response expiry with fractional seconds di
 ## Dedicated refresh-token generator
 User requested refresh generation be structured like the dedicated access generator. AI extracted IRefreshTokenGenerator/RefreshTokenGenerator/RefreshTokenResult and reused the generator's HashToken for refresh/logout lookups. Kept opaque cryptographic random tokens instead of reusing the JWT descriptor. AuthService continues to own family expiry, metadata, rotation/replay handling and transactions. Only TokenHash is persisted; raw Token stays in the existing server-to-cookie flow.
 Algorithm and format unchanged: RandomNumberGenerator.GetBytes(32), hexadecimal encoding and SHA256. New integration assertions verify the stored hash against the cookie token locally without logging either, initial seven-day lifetime, matching cookie expiry, preserved family expiry and replacement links. Existing access/auth/track tests and SQL checks pass; no new AI error was observed or invented for this refactor.
+
+
+## Step 5 — React UI (2026-10-22)
+AI implemented the login, catalog list/detail, typed API/session modules, responsive CSS artwork/layout and 22 frontend tests. Existing API contracts and one-project backend structure were retained. No external imagery or hosted Sites publication used.
+
+Memory access tokens and reload refresh follow the user's storage decision. Strict backend replay revocation makes concurrent cookie use significant: a shared refresh promise and same-origin Web Locks serialize cookie mutations; BroadcastChannel sends only session events. Real simultaneous tab reloads and cross-tab sign-in/out passed. Source/adapter tests support memory-only storage; browser storage contents were not inspected.
+
+The user selected a local demo credential during browser verification. AI configured it through user secrets and added an explicit Development-only reset command that hashes it and revokes refresh sessions. Development seed minimum adjusted to six characters; no credential value is committed and no public registration flow was added. Ordinary startup does not reset passwords.
+
+Real browser checks included invalid login, secure-cookie reload, filtering/search/details, mobile overflow, logout persistence and API outage/retry recovery. Automated frontend checks plus existing backend auth/track regression scripts passed. A full cross-browser/accessibility audit was not performed. React Router's client-directive bundling warning and AutoMapper production-license requirement remain recorded openly. User review is pending before hardening.

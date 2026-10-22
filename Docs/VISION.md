@@ -1,7 +1,7 @@
 # Vision and working agreement
 
-Planning version: 0.8 — 2026-10-22 (Africa/Cairo).
-Status: API, mappings and access generator complete; requested refresh-generator refactor implemented and awaiting review before frontend.
+Planning version: 0.9 — 2026-10-22 (Africa/Cairo).
+Status: Step 5 React UI implemented and verified; awaiting user review before Step 6 hardening.
 
 ## Goal
 Deliver the Takwene Track Management API and React UI within the assignment scope. SQL Server stores artists, tracks, DSPs, distributions, and authentication data. The UI provides login, track list with status filtering, and track detail with DSP statuses. DSP integration is simulated through database records.
@@ -53,7 +53,7 @@ Sources:
 ## Open decisions
 - Step 4 implements the documented schema/status defaults; review report records behavior and limitations.
 - Seeded staff login implemented; no public registration or roles in scope.
-- Task receipt/deadline remains unknown. Runtime/SQL/ports are recorded in handoff; local HTTPS certificate exists, browser trust is unverified.
+- Task receipt/deadline remains unknown. Runtime/SQL/ports are recorded in handoff; local HTTPS certificate is trusted; browser login, refresh and cross-tab behavior verified.
 
 
 Git rule confirmed 2026-10-22: commit each completed milestone locally, including Docs updates; leave pushing to the user. See GIT-HISTORY.md. Committing does not imply user approval of the current milestone.

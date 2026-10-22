@@ -1,9 +1,9 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router'
+import { App } from './App'
 import './style.css'
 
-function App() {
-  return <main><h1>Takwene Track Management</h1><p>Project foundation is ready. Login and track views will follow in their planned milestones.</p></main>
-}
-
-createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>)
+createRoot(document.getElementById('root')!).render(
+  <StrictMode><BrowserRouter><App /></BrowserRouter></StrictMode>,
+)

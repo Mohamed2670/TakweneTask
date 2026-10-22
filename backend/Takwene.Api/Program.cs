@@ -61,11 +61,11 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<AuthRequestFilter>();
 var app = builder.Build();
 app.Services.GetRequiredService<IMapper>().ConfigurationProvider.AssertConfigurationIsValid();
-if (args.Contains("--seed-demo-user"))
+if (args.Contains("--seed-demo-user") || args.Contains("--reset-demo-password"))
 {
     if (!app.Environment.IsDevelopment()) throw new InvalidOperationException("Demo seeding is development-only.");
     using var scope = app.Services.CreateScope();
-    await DevelopmentUserSeeder.SeedAsync(scope.ServiceProvider.GetRequiredService<AppDbContext>(), app.Configuration);
+    await DevelopmentUserSeeder.SeedAsync(scope.ServiceProvider.GetRequiredService<AppDbContext>(), app.Configuration, resetPassword: args.Contains("--reset-demo-password"));
     return;
 }
 app.UseExceptionHandler();
